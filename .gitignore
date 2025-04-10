@@ -1,0 +1,70 @@
+/airflow/logs/*
+/dataset/*
+/hadoop-volume/*
+/neo4j/*
+
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter notebook checkpoint files
+.ipynb_checkpoints/
+
+# Environment
+.env
+.venv/
+venv/
+env/
+*.env
+
+# VSCode / PyCharm
+.vscode/
+.idea/
+
+# Logs and dumps
+*.log
+*.out
+*.bak
+
+# Mac OS / Windows / Linux system files
+.DS_Store
+Thumbs.db
+
+# Python egg
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+pip-wheel-metadata/
+*.whl
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+.cache
+pytest_cache/
+
+# Notebooks output cache
+*.nbconvert.ipynb
+
+# My local notebooks / exports (optional)
+*.pdf
+*.html
+*.ipynb~  # autosave files
+
+# Spark / Hadoop / airflow temp
+metastore_db/
+derby.log
+spark-warehouse/
+.airflow/
+.airflowenv/
+
+# JupyterLab workspace
+.lab/
