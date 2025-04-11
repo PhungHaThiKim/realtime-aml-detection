@@ -1,0 +1,61 @@
+version: '3'
+
+x-spark-common:
+  &spark-common
+  build:
+    context: .
+    dockerfile: ./Dockerfile.spark
+
+services:
+  spark-master:
+    <<: *spark-common
+    # image: bitnami/spark:3.5.0
+    container_name: spark-master
+    hostname: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    networks:
+      - aml-detection-network
+    ports:
+      - "7077:7077"      # Spark master port
+      - "18080:8080"      # Spark web UI
+
+  spark-worker-1:
+    <<: *spark-common
+    # image: bitnami/spark:3.5.0
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+    networks:
+      - aml-detection-network
+    depends_on:
+      - spark-master
+    ports:
+      - "18081:8081"
+
+  spark-worker-2:
+    <<: *spark-common
+    # image: bitnami/spark:3.5.0
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+    networks:
+      - aml-detection-network
+    depends_on:
+      - spark-master
+    ports:
+      - "18082:8081"
+
+networks:
+  aml-detection-network:
+    external: true

@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  neo4j-batch:
+    image: neo4j:latest
+    container_name: neo4j-batch
+    hostname: neo4j-batch
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=none
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1g
+      - NEO4J_dbms_memory_pagecache_size=256m
+    networks:
+      - aml-detection-network
+    volumes:
+      - ./neo4j/data-batch:/data
+
+  neo4j-stream:
+    image: neo4j:latest
+    container_name: neo4j-stream
+    hostname: neo4j-stream
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      - NEO4J_AUTH=none 
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1g
+      - NEO4J_dbms_memory_pagecache_size=256m
+    networks:
+      - aml-detection-network
+    volumes:
+      - ./neo4j/data-stream:/data
+
+networks:
+  aml-detection-network:
+    external: true

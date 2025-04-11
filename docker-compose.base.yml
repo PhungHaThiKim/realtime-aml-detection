@@ -1,0 +1,4 @@
+networks:
+  aml-detection-network:
+    driver: bridge
+    name: aml-detection-network

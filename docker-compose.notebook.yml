@@ -1,0 +1,22 @@
+
+services:
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.notebook
+    container_name: jupyter
+    ports:
+      - "8888:8888"  # Truy cập notebook qua localhost:8888
+    environment:
+      - PYSPARK_PYTHON=python3
+      - PYSPARK_DRIVER_PYTHON=jupyter
+      - PYSPARK_DRIVER_PYTHON_OPTS=notebook --no-browser --ip=0.0.0.0 --NotebookApp.token='' --NotebookApp.password=''
+      - SPARK_MASTER=spark://spark-master:7077
+    networks:
+      - aml-detection-network
+    volumes:
+      - ./notebooks:/home/jovyan/work  # Mount để lưu notebook
+
+networks:
+  aml-detection-network:
+    external: true

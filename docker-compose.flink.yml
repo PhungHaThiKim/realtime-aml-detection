@@ -1,0 +1,40 @@
+services:
+  jobmanager:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.flink
+    container_name: flink-jobmanager
+    command: jobmanager
+    ports:
+      - "38081:8081" # Flink Web UI
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - FLINK_PYTHONPATH=/opt/flink/jobs
+    networks:
+      - aml-detection-network
+    volumes:
+      - ./flink-jobs:/opt/flink/jobs
+      - ./flink-jars:/opt/flink/jars
+      - ./flink-jars/flink-python-1.20.1.jar:/opt/flink/lib/flink-python-1.20.1.jar
+
+  taskmanager:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.flink
+    container_name: flink-taskmanager
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+      - FLINK_PYTHONPATH=/opt/flink/jobs
+    networks:
+      - aml-detection-network
+    volumes:
+      - ./flink-jobs:/opt/flink/jobs
+      - ./flink-jars:/opt/flink/jars
+      - ./flink-jars/flink-python-1.20.1.jar:/opt/flink/lib/flink-python-1.20.1.jar
+
+networks:
+  aml-detection-network:
+    external: true

@@ -1,0 +1,8 @@
+FROM jupyter/pyspark-notebook:spark-3.5.0
+
+USER root
+
+# Cài thêm kafka-python
+RUN pip install kafka-python
+
+USER jovyan

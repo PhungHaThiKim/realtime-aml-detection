@@ -1,0 +1,28 @@
+services:
+  hadoop:
+    image: apache/hadoop:3.3.6
+    container_name: hadoop
+    hostname: hadoop
+    platform: linux/amd64
+    user: root
+    ports:
+      - "9870:9870"   # Web UI NameNode
+      - "9864:9864"   # DataNode
+      - "9000:9000"   # HDFS RPC
+    environment:
+      - HDFS_NAMENODE_USER=root
+      - HDFS_DATANODE_USER=root
+    networks:
+      - aml-detection-network
+    entrypoint: "/entrypoint.sh"
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./dataset:/app/dataset
+      - ./hadoop-volume/name:/hadoop/dfs/name
+      - ./hadoop-volume/data:/hadoop/dfs/data
+      - ./entrypoint.sh:/entrypoint.sh
+
+networks:
+  aml-detection-network:
+    external: true

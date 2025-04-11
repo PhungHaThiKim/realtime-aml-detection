@@ -1,0 +1,7 @@
+pyspark==3.5.0
+neo4j-driver
+apache-airflow-providers-apache-spark
+pymssql
+pandas
+hdfs
+pyarrow
