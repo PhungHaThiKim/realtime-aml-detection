@@ -58,7 +58,6 @@ def save_partition_batch(partition, run_date: str):
         t.amount_paid = row.amount_paid,
         t.payment_currency = row.payment_currency,
         t.payment_format = row.payment_format,
-        t.is_laundering = row.is_laundering,
         t.date = row.run_date
     """
 
@@ -82,7 +81,7 @@ def save_partition_batch(partition, run_date: str):
                     "amount_paid": float(row["Amount Paid"]),
                     "payment_currency": row["Payment Currency"],
                     "payment_format": row["Payment Format"],
-                    "is_laundering": int(row["Is Laundering"]),
+                    # "is_laundering": int(row["Is Laundering"]),
                     "ts": row["ts"].strftime("%Y-%m-%d %H:%M:%S"),
                     "run_date": run_date,
                 }

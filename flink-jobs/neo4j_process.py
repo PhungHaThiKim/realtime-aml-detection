@@ -33,7 +33,6 @@ class Neo4jProcessor(ProcessFunction):
                 t.amount_paid = $amount_paid,
                 t.payment_currency = $payment_currency,
                 t.payment_format = $payment_format,
-                t.is_laundering = $is_laundering,
                 t.date = $run_date
             """
 
@@ -48,7 +47,6 @@ class Neo4jProcessor(ProcessFunction):
                 "amount_paid": float(record["amount_paid"]),
                 "payment_currency": record["payment_currency"],
                 "payment_format": record["payment_format"],
-                "is_laundering": int(record["is_laundering"]),
                 "ts": record["ts"],
                 "run_date": record["run_date"],
             }

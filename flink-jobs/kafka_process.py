@@ -20,10 +20,10 @@ class KafkaWriterProcessor(ProcessFunction):
             record = json.loads(value)
             features = {
                 "txn_id": record["txn_id"],
-                "amount": record["amount_paid"],
-                "is_laundering": record["is_laundering"]
+                "amount": record["amount_paid"]
             }
-            self.producer.send("features", key=record['from_bank'], value=features)
+            print("features: ", features)
+            self.producer.send("features", value=features)
             print(f"📤 Kafka: sent feature {features}")
         except Exception as e:
             print(f"❌ Kafka send error: {e}")
