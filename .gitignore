@@ -3,7 +3,8 @@
 /hadoop-volume/*
 /neo4j/*
 
-
+# Ignore all CSV files in all folders
+**/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
