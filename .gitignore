@@ -2,6 +2,8 @@
 /dataset/*
 /hadoop-volume/*
 /neo4j/*
+Makefile
+setup-flow.sh
 
 # Ignore all CSV files in all folders
 **/*.csv
