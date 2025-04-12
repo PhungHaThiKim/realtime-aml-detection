@@ -12,7 +12,7 @@ from pyflink.datastream.connectors.kafka import KafkaRecordSerializationSchema
 from pyflink.datastream.connectors.kafka import FlinkKafkaProducer, FlinkKafkaConsumer
 from pyflink.datastream.formats.json import JsonRowSerializationSchema, JsonRowDeserializationSchema
 from pyflink.common import Types
-from kafka_process import FeatureMergeProcessor
+from feature_process import FeatureMergeProcessor
 from neo4j_process import Neo4jProcessor
 from predict_process import PredictProcessor
 
@@ -55,12 +55,12 @@ def main():
     # 👇 Truyền config vào môi trường Flink
     env = StreamExecutionEnvironment.get_execution_environment(config)
     env.set_parallelism(1)
-    env.add_python_file("/opt/flink/jobs/kafka_process.py")
+    env.add_python_file("/opt/flink/jobs/feature_process.py")
     env.add_python_file("/opt/flink/jobs/neo4j_process.py")
     env.add_python_file("/opt/flink/jobs/predict_process.py")
     env.enable_checkpointing(5000)
 
-    # 👇 Tạo KafkaSource chuẩn
+    # 👇 Tạo Flink Consumer
     kafka_source = (
         KafkaSource.builder()
         .set_bootstrap_servers("kafka:9092")
@@ -79,6 +79,7 @@ def main():
         source_name="Kafka Source",
     )
 
+    # Ghi data -> Neo4j -> Features -> Predict
     processed = ds.process(Neo4jProcessor()).process(FeatureMergeProcessor()).process(PredictProcessor())
     processed.print()
 

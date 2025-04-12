@@ -33,8 +33,9 @@ def enrich_tx_stats(**context):
             """
             MATCH (a:Account)-[t:TRANSACTION]->(b:Account)
             WHERE t.date > $from_date AND t.date <= $to_date
-            RETURN a.id as account_id, count(*) as tx_count, avg(t.amount_paid) as avg_amount,
-                   count(DISTINCT b.id) as unique_targets
+            RETURN a.id as account_id, count(*) as tx_count,
+                avg(t.amount_paid) as avg_amount,
+                count(DISTINCT b.id) as unique_targets
             """,
             from_date=from_date.strftime("%Y-%m-%d"),
             to_date=run_date

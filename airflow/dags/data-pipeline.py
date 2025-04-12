@@ -24,51 +24,24 @@ def choose_date():
 
     return run_date
 
-def spark_query(**context):
-    ti = context["ti"]
-    run_date = ti.xcom_pull(task_ids="choose_date")
-
-    dt = datetime.strptime(run_date, "%Y-%m-%d")
-    year, month, day = dt.year, dt.month, dt.day
-
-    print(f"📅 Running Spark query for {run_date} (Y:{year}, M:{month}, D:{day})")
-
-    # Tạo SparkSession
-    spark = SparkSession.builder \
-        .appName("AirflowInlineSparkQuery") \
-        .master("spark://spark-master:7077") \
-        .getOrCreate()
-
-    # Đọc dữ liệu theo partition
-    df = spark.read.parquet("hdfs://hadoop:9000/data/transactions/partitioned")
-    df_filtered = df.filter(
-        (df["year"] == year) &
-        (df["month"] == month) &
-        (df["day"] == day)
-    )
-
-    # Hiển thị vài dòng đầu
-    df_filtered.show(5)
-
-    # Ghi tạm ra HDFS để bước tiếp theo dùng
-    df_filtered.coalesce(1).write.mode("overwrite").parquet(f"hdfs://hadoop:9000/data/transactions/tmp/query_result/{run_date}")
-
-    spark.stop()
-    
-
-
 
 def transform_data(**context):
     ti = context["ti"]
     run_date = ti.xcom_pull(task_ids="choose_date")
     print(f"🔧 Transform dữ liệu cho ngày: {run_date}")
-    time.sleep(2)
+
+    dt = datetime.strptime(run_date, "%Y-%m-%d")
+    year, month, day = dt.year, dt.month, dt.day
+    print(f"📅 Running Spark query for {run_date} (Y:{year}, M:{month}, D:{day})")
+
     spark = SparkSession.builder \
         .appName("TransformDataOverwrite") \
         .master("spark://spark-master:7077") \
         .getOrCreate()
 
-    df = spark.read.parquet(f"hdfs://hadoop:9000/data/transactions/tmp/query_result/{run_date}")
+    # Đọc dữ liệu theo partition
+    path = f"hdfs://hadoop:9000/data/transactions/partitioned/year={year}/month={month}/day={day}"
+    df = spark.read.parquet(path)
     df.show(5)
 
     # # Overwrite luôn cột gốc
@@ -86,11 +59,6 @@ def transform_data(**context):
     spark.stop()
 
 
-def cleanup():
-    print("🧹 Dọn dẹp tài nguyên sau khi hoàn thành")
-    time.sleep(1)
-
-
 with DAG(
     dag_id="batch-transaction-to-graph",
     description="Chuyển dữ liệu giao dịch thành graph và lưu vào Neo4j",
@@ -102,13 +70,7 @@ with DAG(
 
     t1 = PythonOperator(task_id="choose_date", python_callable=choose_date)
 
-    t2 = PythonOperator(
-        task_id="run_spark_query",
-        python_callable=spark_query,
-        provide_context=True,
-    )
-
-    t3 = PythonOperator(task_id="transform_data", python_callable=transform_data)
+    t2 = PythonOperator(task_id="transform_data", python_callable=transform_data)
 
     write_neo4j = SparkSubmitOperator(
         task_id="write_to_neo4j",
@@ -117,14 +79,12 @@ with DAG(
         conn_id="spark_standalone"
     )
 
-    t5 = PythonOperator(task_id="cleanup", python_callable=cleanup)
-
-    trigger_enrich_dag = TriggerDagRunOperator(
-        task_id="trigger_add_features",
+    call_DAG_add_features = TriggerDagRunOperator(
+        task_id="call_DAG_add_features",
         trigger_dag_id="add-features-daily",  # DAG bạn muốn gọi tiếp
         conf={"run_date": "{{ ti.xcom_pull(task_ids='choose_date') }}"},  # truyền ngày đã xử lý
         wait_for_completion=False,  # nếu muốn đợi DAG kia hoàn thành thì đặt True
     )
 
-    t1 >> t2 >> t3 >> write_neo4j >> t5 >> trigger_enrich_dag
+    t1 >> t2 >> write_neo4j >> call_DAG_add_features
     # t1 >> t3 >> write_neo4j >> t5
