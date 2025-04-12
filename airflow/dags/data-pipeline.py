@@ -7,6 +7,8 @@ from pyspark.sql import SparkSession
 from airflow.operators.python import get_current_context
 from neo4j import GraphDatabase
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from pyspark.sql.functions import concat_ws
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 
 # Fake functions to simulate actual work
@@ -46,19 +48,42 @@ def spark_query(**context):
     )
 
     # Hiển thị vài dòng đầu
-    df_filtered.show(5, truncate=False)
+    df_filtered.show(5)
 
     # Ghi tạm ra HDFS để bước tiếp theo dùng
-    df_filtered.write.mode("overwrite") \
-        .parquet(f"hdfs://hadoop:9000/data/transactions/tmp/query_result/{run_date}")
+    df_filtered.coalesce(1).write.mode("overwrite").parquet(f"hdfs://hadoop:9000/data/transactions/tmp/query_result/{run_date}")
 
     spark.stop()
+    
 
 
 
-def transform_data():
-    print("🔧 Transform dữ liệu nếu cần (lọc, chuẩn hóa, ...) ")
+def transform_data(**context):
+    ti = context["ti"]
+    run_date = ti.xcom_pull(task_ids="choose_date")
+    print(f"🔧 Transform dữ liệu cho ngày: {run_date}")
     time.sleep(2)
+    spark = SparkSession.builder \
+        .appName("TransformDataOverwrite") \
+        .master("spark://spark-master:7077") \
+        .getOrCreate()
+
+    df = spark.read.parquet(f"hdfs://hadoop:9000/data/transactions/tmp/query_result/{run_date}")
+    df.show(5)
+
+    # # Overwrite luôn cột gốc
+    df_transformed = df.withColumn(
+        "From Account", concat_ws("_", df["From Bank"], df["From Account"])
+    ).withColumn(
+        "To Account", concat_ws("_", df["To Bank"], df["To Account"])
+    )
+
+    df_transformed.write.mode("overwrite").parquet(
+        f"hdfs://hadoop:9000/data/transactions/tmp/query_result_transformed/{run_date}"
+    )
+
+    df_transformed.select("From Bank", "From Account", "To Bank", "To Account").show(5, truncate=False)
+    spark.stop()
 
 
 def cleanup():
@@ -94,5 +119,12 @@ with DAG(
 
     t5 = PythonOperator(task_id="cleanup", python_callable=cleanup)
 
-    t1 >> t2 >> t3 >> write_neo4j >> t5
+    trigger_enrich_dag = TriggerDagRunOperator(
+        task_id="trigger_add_features",
+        trigger_dag_id="add-features-daily",  # DAG bạn muốn gọi tiếp
+        conf={"run_date": "{{ ti.xcom_pull(task_ids='choose_date') }}"},  # truyền ngày đã xử lý
+        wait_for_completion=False,  # nếu muốn đợi DAG kia hoàn thành thì đặt True
+    )
+
+    t1 >> t2 >> t3 >> write_neo4j >> t5 >> trigger_enrich_dag
     # t1 >> t3 >> write_neo4j >> t5

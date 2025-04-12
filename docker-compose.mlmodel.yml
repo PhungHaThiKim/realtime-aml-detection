@@ -1,0 +1,18 @@
+services:
+  ml-model:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlmodel
+    container_name: ml_model
+    hostname: ml_model
+    ports:
+      - "5000:5000"
+    networks:
+      - aml-detection-network
+    volumes:
+      - ./notebooks/iforest_model.pkl:/app/iforest_model.pkl
+      - ./processer/ml_model_server.py:/app/ml_model_server.py
+
+networks:
+  aml-detection-network:
+    external: true

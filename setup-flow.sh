@@ -50,6 +50,22 @@ make up-flink
 #---------------------(lưu ý nên test trên máy window sửa dockerfile: /usr/lib/jvm/java-17-openjdk-[amd64])
 -> cp DATE.csv ~/workspace/aml-detection/notebooks
 
+# === setup mlmodel
+make build-mlmodel
+make up-mlmodel
+curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tx_count_delta": -3,
+    "avg_amount_spike": 1.5,
+    "target_growth": 0.4,
+    "smurfing_score": 0.02,
+    "round_trip_combined": 1,
+    "avg_round_trip_len": 3
+  }'
+
 # === TEST Flow STREAM
 docker exec -it flink-jobmanager flink run -py /opt/flink/jobs/flink_kafka_stream.py
 -> run stream notebook: 2_stream-transactions.ipynb
+
+docker exec -it flink-jobmanager python /opt/flink/jobs/flink_kafka_stream.py

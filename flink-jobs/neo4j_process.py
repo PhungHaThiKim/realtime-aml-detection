@@ -38,9 +38,9 @@ class Neo4jProcessor(ProcessFunction):
 
             params = {
                 "from_bank": int(record["from_bank"]),
-                "from_acc": record["from_acc"],
+                "from_acc": f"{record['from_bank']}_{record['from_acc']}",
                 "to_bank": int(record["to_bank"]),
-                "to_acc": record["to_acc"],
+                "to_acc": f"{record['to_bank']}_{record['to_acc']}",
                 "txn_id": int(record["txn_id"]),
                 "amount_received": float(record["amount_received"]),
                 "receiving_currency": record["receiving_currency"],

@@ -1,0 +1,8 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN pip install flask scikit-learn joblib
+
+EXPOSE 5000
+CMD ["python", "ml_model_server.py"]

@@ -126,7 +126,7 @@ if __name__ == "__main__":
 
     df = (
         spark.read.parquet(
-            f"hdfs://hadoop:9000/data/transactions/tmp/query_result/{run_date}"
+            f"hdfs://hadoop:9000/data/transactions/tmp/query_result_transformed/{run_date}"
         )
         .orderBy("ts", "txn_id")
         .repartition(2)
